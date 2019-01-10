@@ -27,6 +27,9 @@ export default {
   seekCast: function (seconds: number) {
 	GoogleCast.seekCast(seconds);
   },
+  setVolume: function (seconds: number) {
+    GoogleCast.setVolume(seconds);
+  },
   togglePauseCast: function () {
 	GoogleCast.togglePauseCast();
   },

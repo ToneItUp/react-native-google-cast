@@ -128,6 +128,10 @@ RCT_EXPORT_METHOD(seekCast:(double) seconds){
   [self.mediaControlChannel seekToTimeInterval: seconds];
 }
 
+RCT_EXPORT_METHOD(setVolume:(double) volume){
+  [self.mediaControlChannel setStreamVolume: volume];
+}
+
 RCT_REMAP_METHOD(getDevices,
                  resolver:(RCTPromiseResolveBlock)resolve
                  reject:(RCTPromiseRejectBlock)reject)
