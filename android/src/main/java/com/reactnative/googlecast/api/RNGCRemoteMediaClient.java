@@ -33,10 +33,26 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
   public static final String MEDIA_PLAYBACK_STARTED =
       "GoogleCast:MediaPlaybackStarted";
   public static final String MEDIA_PLAYBACK_ENDED =
-      "GoogleCast:MediaPlaybackEnded";
+          "GoogleCast:MediaPlaybackEnded";
+  public static final String MEDIA_PROGRESS_UPDATE =
+          "GoogleCast:MediaProgressUpdate";
+
 
   public RNGCRemoteMediaClient(ReactApplicationContext reactContext) {
     super(reactContext);
+    final CastSession castSession = CastContext.getSharedInstance(this.getReactContext())
+            .getSessionManager()
+            .getCurrentCastSession();
+
+    if (castSession == null) {
+      throw new IllegalStateException(("No castSession!"));
+    }
+
+    final RemoteMediaClient client = castSession.getRemoteMediaClient();
+
+    if (client == null) {
+      throw new IllegalStateException(("No remoteMediaClient!"));
+    }
   }
 
   @Override
@@ -166,10 +182,10 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
     }, promise);
   }
 
-  protected With<RemoteMediaClient> with = new With<RemoteMediaClient>() {
+  protected With<RemoteMediaClient> with = new With<RemoteMediaClient>(getReactApplicationContext()) {    
     @Override
     protected RemoteMediaClient getX() {
-      final CastSession castSession = CastContext.getSharedInstance()
+      final CastSession castSession = CastContext.getSharedInstance(this.getReactContext())
                                           .getSessionManager()
                                           .getCurrentCastSession();
 
@@ -184,11 +200,6 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
       }
 
       return client;
-    }
-
-    @Override
-    protected ReactContext getReactApplicationContext() {
-      return getReactApplicationContext();
     }
   };
 }

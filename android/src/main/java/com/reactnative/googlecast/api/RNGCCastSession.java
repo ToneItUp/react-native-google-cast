@@ -122,7 +122,7 @@ public class RNGCCastSession extends ReactContextBaseJavaModule {
     }, promise);
   }
 
-  private With<CastSession> with = new With<CastSession>() {
+  private With<CastSession> with = new With<CastSession>(getReactApplicationContext()) {
     @Override
     protected CastSession getX() {
       final CastSession castSession = CastContext.getSharedInstance()
@@ -134,11 +134,6 @@ public class RNGCCastSession extends ReactContextBaseJavaModule {
       }
 
       return castSession;
-    }
-
-    @Override
-    protected ReactContext getReactApplicationContext() {
-      return getReactApplicationContext();
     }
   };
 }

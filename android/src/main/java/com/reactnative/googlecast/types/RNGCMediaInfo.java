@@ -13,60 +13,16 @@ import java.util.List;
 
 public class RNGCMediaInfo {
   public static MediaInfo fromJson(final ReadableMap json) {
-    final MediaInfo.Builder builder =
-        new MediaInfo.Builder(json.getString("contentId"));
-
-//    if (json.hasKey("adBreakClips")) {
-//      builder.setContentType(json.getString("adBreakClips"));
-//    }
-
-//    if (json.hasKey("adBreaks")) {
-//      builder.setContentType(json.getString("adBreaks"));
-//    }
-
-    if (json.hasKey("contentType")) {
-      builder.setContentType(json.getString("contentType"));
-    }
-
-    if (json.hasKey("customData")) {
-      builder.setCustomData(
-          RNGCJSONObject.fromJson(json.getMap("customData")));
-    }
-
-    if (json.hasKey("entity")) {
-      builder.setEntity(json.getString(("entity")));
-    }
-
+    final List<MediaTrack> mediaTracks = new ArrayList<MediaTrack>();
     if (json.hasKey("mediaTracks")) {
-      final List<MediaTrack> mediaTracks = new ArrayList<MediaTrack>();
-      for (Object mediaTrack:
-           json.getArray("mediaTracks").toArrayList()) {
+      for (Object mediaTrack: json.getArray("mediaTracks").toArrayList()) {
         mediaTracks.add(RNGCMediaTrack.fromJson((ReadableMap)mediaTrack));
       }
-      builder.setMediaTracks(mediaTracks);
     }
-
-    if (json.hasKey("metadata")) {
-      builder.setMetadata(RNGCMediaMetadata.fromJson(json.getMap("metadata")));
-    }
-
-    if (json.hasKey("streamDuration")) {
-      builder.setStreamDuration(json.getInt("streamDuration"));
-    }
-
-    if (json.hasKey("streamType")) {
-      builder.setStreamType(RNGCMediaStreamType.fromJson(json.getString("streamType")));
-    }
-
-//    if (json.hasKey("textTrackStyle")) {
-//      builder.setEntity(json.getString(("textTrackStyle")));
-//    }
-
-    // if (json.hasKey("vmapAdsRequest")) {
-    //   builder.setEntity(json.getString(("vmapAdsRequest")));
-    // }
-
-    return builder.build();
+    return new MediaInfo.Builder(json.getString("contentId"))
+            .setContentType(json.getString("contentType"))
+            .setMetadata(RNGCMediaMetadata.fromJson(json.getMap("metadata")))
+            .build();
   }
 
   public static WritableMap toJson(final MediaInfo info) {

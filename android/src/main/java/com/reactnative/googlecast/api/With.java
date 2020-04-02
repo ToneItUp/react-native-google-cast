@@ -3,13 +3,27 @@ package com.reactnative.googlecast.api;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.common.api.PendingResult;
 
-abstract class With<X> {
+abstract class With<X> {  
+  private static @Nullable ReactApplicationContext reactContext;
+
+  public With() {
+    this(null);
+  }
+
+  public With(ReactApplicationContext context) {
+    this.reactContext = context;
+  }
+
+  protected ReactApplicationContext getReactContext() {
+    return this.reactContext;
+  };
+  
   protected interface WithX<X> {
     void execute(X x);
   }
@@ -40,8 +54,13 @@ abstract class With<X> {
   }
 
   protected void withX(final WithXPromisify<X> runnable,
-                            final @Nullable Promise promise) {
-    getReactApplicationContext().runOnUiQueueThread(new Runnable() {
+                            final @Nullable Promise promise) throws IllegalStateException {
+    ReactApplicationContext context = getReactContext();
+    if(context == null) {
+      throw new IllegalStateException("No react context available for runOnUiQueueThread");
+    }
+
+    context.runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
         try {
@@ -61,5 +80,4 @@ abstract class With<X> {
   }
 
   abstract protected X getX() throws IllegalStateException;
-  abstract protected ReactContext getReactApplicationContext();
 }
