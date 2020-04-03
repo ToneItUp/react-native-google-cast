@@ -1,6 +1,7 @@
 package com.reactnative.googlecast.api;
 
 import androidx.annotation.Nullable;
+import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -13,6 +14,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient.ProgressListener;
 import com.google.android.gms.common.api.PendingResult;
 import com.reactnative.googlecast.types.RNGCJSONObject;
 import com.reactnative.googlecast.types.RNGCMediaInfo;
@@ -23,7 +25,7 @@ import com.reactnative.googlecast.types.RNGCMediaSeekOptions;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
+public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements LifecycleEventListener {
 
   @VisibleForTesting
   public static final String REACT_CLASS = "RNGCRemoteMediaClient";
@@ -37,22 +39,12 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
   public static final String MEDIA_PROGRESS_UPDATE =
           "GoogleCast:MediaProgressUpdate";
 
+  private ProgressListener mProgressListener;
 
   public RNGCRemoteMediaClient(ReactApplicationContext reactContext) {
     super(reactContext);
-    final CastSession castSession = CastContext.getSharedInstance(this.getReactContext())
-            .getSessionManager()
-            .getCurrentCastSession();
-
-    if (castSession == null) {
-      throw new IllegalStateException(("No castSession!"));
-    }
-
-    final RemoteMediaClient client = castSession.getRemoteMediaClient();
-
-    if (client == null) {
-      throw new IllegalStateException(("No remoteMediaClient!"));
-    }
+    reactContext.addLifecycleEventListener(this);
+    this.mProgressListener = new RNGCRemoteMediaClientProgressListener(this);
   }
 
   @Override
@@ -67,6 +59,7 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
     constants.put("MEDIA_STATUS_UPDATED", MEDIA_STATUS_UPDATED);
     constants.put("MEDIA_PLAYBACK_STARTED", MEDIA_PLAYBACK_STARTED);
     constants.put("MEDIA_PLAYBACK_ENDED", MEDIA_PLAYBACK_ENDED);
+    constants.put("MEDIA_PROGRESS_UPDATE", MEDIA_PROGRESS_UPDATE);
 
     return constants;
   }
@@ -91,6 +84,7 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
     with.withX(new With.WithXPromisify<RemoteMediaClient>() {
       @Override
       public PendingResult execute(RemoteMediaClient client) {
+        client.addProgressListener(mProgressListener, 1000);
         return client.load(RNGCMediaInfo.fromJson(mediaInfo),
                            RNGCMediaLoadOptions.fromJson(loadOptions));
       }
@@ -177,6 +171,7 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
     with.withX(new With.WithXPromisify<RemoteMediaClient>() {
       @Override
       public PendingResult execute(RemoteMediaClient client) {
+        client.removeProgressListener(mProgressListener);
         return client.stop(RNGCJSONObject.fromJson(customData));
       }
     }, promise);
@@ -196,10 +191,31 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule {
       final RemoteMediaClient client = castSession.getRemoteMediaClient();
 
       if (client == null) {
-        throw new IllegalStateException(("No remoteMediaClient!"));
+        throw new IllegalStateException(("No device client!"));
       }
 
       return client;
     }
   };
+
+  @Override
+  public void onHostPause() {}
+
+  @Override
+  public void onHostResume() {}
+
+  @Override
+  public void onHostDestroy() {
+    final CastSession castSession = CastContext.getSharedInstance(getReactApplicationContext())
+            .getSessionManager()
+            .getCurrentCastSession();
+
+    if (castSession != null) {
+      final RemoteMediaClient client = castSession.getRemoteMediaClient();
+
+      if (client != null) {
+        client.removeProgressListener(mProgressListener);
+      }
+    }
+  }
 }
