@@ -184,20 +184,21 @@ public class RNGCCastContext
 
   @Override
   public void onHostPause() {
+  }
+
+  @Override
+  public void onHostDestroy() {
     getReactApplicationContext().runOnUiQueueThread(new Runnable() {
       @Override
       public void run() {
         SessionManager sessionManager =
-            CastContext.getSharedInstance(getReactApplicationContext())
-                .getSessionManager();
+                CastContext.getSharedInstance(getReactApplicationContext())
+                        .getSessionManager();
         sessionManager.removeSessionManagerListener(mSessionManagerListener,
-                                                    CastSession.class);
+                CastSession.class);
       }
     });
   }
-
-  @Override
-  public void onHostDestroy() {}
 
   public void runOnUiQueueThread(Runnable runnable) {
     getReactApplicationContext().runOnUiQueueThread(runnable);
