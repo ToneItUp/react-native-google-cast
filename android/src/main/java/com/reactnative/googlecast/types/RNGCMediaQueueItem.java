@@ -68,9 +68,16 @@ public class RNGCMediaQueueItem {
   public static WritableMap toJson(final MediaQueueItem item) {
     final WritableMap json = new WritableNativeMap();
 
+    if(item == null) {
+      return json;
+    }
+
     final WritableArray activeTrackIds = Arguments.createArray();
-    for (long activeTrackId: item.getActiveTrackIds()) {
-      activeTrackIds.pushInt((int) activeTrackId);
+    long[] activeTracks = item.getActiveTrackIds();
+    if (activeTracks != null) {
+      for (long activeTrackId : activeTracks) {
+        activeTrackIds.pushInt((int) activeTrackId);
+      }
     }
     json.putArray("activeTrackIds", activeTrackIds);
 

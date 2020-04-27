@@ -107,6 +107,10 @@ public class RNGCMediaMetadata {
   public static WritableMap toJson(final MediaMetadata metadata) {
     final WritableMap json = Arguments.createMap();
 
+    if (metadata == null) {
+      return json;
+    }
+
     json.putString("type", RNGCMediaMetadataType.toJson(
       metadata.getMediaType()));
 

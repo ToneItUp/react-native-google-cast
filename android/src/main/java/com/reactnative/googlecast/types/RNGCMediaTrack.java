@@ -40,7 +40,9 @@ public class RNGCMediaTrack {
 
   public static WritableMap toJson(final MediaTrack track) {
     final WritableMap json = new WritableNativeMap();
-
+    if (track == null) {
+      return json;
+    }
     json.putInt("id", (int) track.getId());
     json.putString("contentId", track.getContentId());
     json.putString("contentType", track.getContentType());

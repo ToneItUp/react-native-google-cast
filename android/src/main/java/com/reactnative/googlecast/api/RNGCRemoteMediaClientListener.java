@@ -61,7 +61,9 @@ public class RNGCRemoteMediaClientListener
   }
 
   @Override
-  public void onMetadataUpdated() {}
+  public void onMetadataUpdated() {
+
+  }
 
   @Override
   public void onQueueStatusUpdated() {}

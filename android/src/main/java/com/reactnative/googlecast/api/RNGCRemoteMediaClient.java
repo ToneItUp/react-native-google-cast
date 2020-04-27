@@ -1,5 +1,6 @@
 package com.reactnative.googlecast.api;
 
+import android.util.Log;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
@@ -40,11 +41,13 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
           "GoogleCast:MediaProgressUpdate";
 
   private ProgressListener mProgressListener;
+  private RemoteMediaClient.Callback mClientListener;
 
   public RNGCRemoteMediaClient(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.addLifecycleEventListener(this);
     this.mProgressListener = new RNGCRemoteMediaClientProgressListener(this);
+    this.mClientListener = new RNGCRemoteMediaClientListener(this);
   }
 
   @Override
@@ -69,6 +72,10 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
   }
 
   protected void sendEvent(String eventName, @Nullable WritableMap params) {
+    Log.d(REACT_CLASS, eventName);
+    if(params != null) {
+      Log.d(REACT_CLASS, params.toString());
+    }
     getReactApplicationContext()
         .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
         .emit(eventName, params);
@@ -85,6 +92,7 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
       @Override
       public PendingResult execute(RemoteMediaClient client) {
         client.addProgressListener(mProgressListener, 1000);
+        client.registerCallback(mClientListener);
         return client.load(RNGCMediaInfo.fromJson(mediaInfo),
                            RNGCMediaLoadOptions.fromJson(loadOptions));
       }
@@ -214,7 +222,13 @@ public class RNGCRemoteMediaClient extends ReactContextBaseJavaModule implements
       final RemoteMediaClient client = castSession.getRemoteMediaClient();
 
       if (client != null) {
-        client.removeProgressListener(mProgressListener);
+        if(mProgressListener != null) {
+          client.removeProgressListener(mProgressListener);
+        }
+
+        if(mClientListener != null) {
+          client.unregisterCallback(mClientListener);
+        }
       }
     }
   }

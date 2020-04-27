@@ -18,6 +18,11 @@ public class RNGCJSONObject {
 
   public static WritableMap toJson(JSONObject jsonObject) {
     WritableMap writableMap = Arguments.createMap();
+
+    if (jsonObject == null) {
+      return writableMap;
+    }
+
     Iterator iterator = jsonObject.keys();
 
     while (iterator.hasNext()) {

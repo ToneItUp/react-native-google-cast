@@ -12,6 +12,10 @@ public class RNGCVideoInfo {
   public static WritableMap toJson(final VideoInfo video) {
     final WritableMap json = new WritableNativeMap();
 
+    if (video == null) {
+      return json;
+    }
+
     json.putString("hdrType", RNGCVideoInfoHDRType.toJson(video.getHdrType()));
     json.putInt("height", video.getHeight());
     json.putInt("width", video.getWidth());

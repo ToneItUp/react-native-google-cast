@@ -15,6 +15,10 @@ public class RNGCApplicationMetadata {
   public static WritableMap toJson(final ApplicationMetadata metadata) {
     final WritableMap json = new WritableNativeMap();
 
+    if (metadata == null) {
+      return json;
+    }
+
     json.putString("applicationId", metadata.getApplicationId());
 
     WritableArray images = Arguments.createArray();
