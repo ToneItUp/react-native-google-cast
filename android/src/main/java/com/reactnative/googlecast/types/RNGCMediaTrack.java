@@ -46,7 +46,13 @@ public class RNGCMediaTrack {
     json.putInt("id", (int) track.getId());
     json.putString("contentId", track.getContentId());
     json.putString("contentType", track.getContentType());
-    json.putMap("customData", RNGCJSONObject.toJson(track.getCustomData()));
+
+    JSONObject customData = track.getCustomData();
+    if (customData != null) {
+      json.putMap("customData", RNGCJSONObject.toJson(customData));
+    } else {
+      json.putMap("customData", null);
+    }
     json.putString("languageCode", track.getLanguage());
     json.putString("name", track.getName());
     json.putString("type", RNGCMediaTrackType.toJson(track.getType()));

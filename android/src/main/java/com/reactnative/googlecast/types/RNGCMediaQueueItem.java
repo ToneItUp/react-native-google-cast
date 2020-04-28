@@ -89,11 +89,15 @@ public class RNGCMediaQueueItem {
 
     json.putMap("mediaInfo", RNGCMediaInfo.toJson(item.getMedia()));
 
-    json.putDouble("playbackDuration", item.getPlaybackDuration());
+    Double playbackDuration = item.getPlaybackDuration();
+    playbackDuration = Double.isInfinite(playbackDuration) ? -1 : playbackDuration;
+    json.putDouble("playbackDuration", playbackDuration);
 
     json.putDouble("preloadTime", item.getPreloadTime());
 
-    json.putDouble("startTime", item.getStartTime());
+    Double startTime = item.getStartTime();
+    startTime = Double.isNaN(startTime) ? -1 : startTime;
+    json.putDouble("startTime", startTime);
 
     return json;
   }

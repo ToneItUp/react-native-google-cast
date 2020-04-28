@@ -31,7 +31,10 @@ public class RNGCJSONObject {
         Object value = jsonObject.get(key);
 
         if (value instanceof Float || value instanceof Double) {
-          writableMap.putDouble(key, jsonObject.getDouble(key));
+          Double dValue = jsonObject.getDouble(key);
+          if (!Double.isNaN(dValue) && !Double.isInfinite(dValue)) {
+            writableMap.putDouble(key, dValue);
+          }
         } else if (value instanceof Number) {
           writableMap.putInt(key, jsonObject.getInt(key));
         } else if (value instanceof String) {

@@ -1,5 +1,7 @@
 package com.reactnative.googlecast.types;
 
+import android.util.Log;
+import org.json.JSONObject;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -18,6 +20,8 @@ public class RNGCMediaStatus {
       return json;
     }
 
+    Log.d("RNGCMediaStatus", status.toString());
+
     json.putInt("currentItemId", status.getCurrentItemId());
 
     MediaQueueItem queueItem = status.getQueueItemById(status.getCurrentItemId());
@@ -25,7 +29,10 @@ public class RNGCMediaStatus {
       json.putMap("currentQueueItem", RNGCMediaQueueItem.toJson(queueItem));
     }
 
-    json.putMap("customData", RNGCJSONObject.toJson(status.getCustomData()));
+    JSONObject customData = status.getCustomData();
+    if (customData != null) {
+      json.putMap("customData", RNGCJSONObject.toJson(customData));
+    }
 
     json.putString("idleReason",
                    RNGCMediaPlayerIdleReason.toJson(status.getIdleReason()));
@@ -59,7 +66,9 @@ public class RNGCMediaStatus {
       json.putMap("videoInfo", RNGCVideoInfo.toJson(videoInfo));
     }
 
-    json.putDouble("volume", status.getStreamVolume());
+    Double streamVolume = status.getStreamVolume();
+    streamVolume = Double.isNaN(streamVolume) ? -1 : streamVolume;
+    json.putDouble("volume", streamVolume);
 
     return json;
   }
