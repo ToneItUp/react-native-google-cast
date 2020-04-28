@@ -1,6 +1,8 @@
 #import "RNGCCastContext.h"
-#import "RNGCSessionManager.h"
 #import "../types/RCTConvert+GCKCastState.m"
+#import "../types/RCTConvert+GCKMediaInformation.m"
+#import "../types/RCTConvert+GCKMediaLoadOptions.m"
+#import "../types/RCTConvert+GCKMediaStatus.m"
 
 #import <React/RCTBridge.h>
 #import <React/RCTConvert.h>
@@ -9,6 +11,10 @@
 
 @implementation RNGCCastContext {
   bool hasListeners;
+  NSUInteger currentItemID;
+  bool playbackStarted;
+  bool playbackEnded;
+  GCKSessionManager *_sessionManager;
 }
 
 @synthesize bridge = _bridge;
@@ -21,6 +27,7 @@ RCT_EXPORT_MODULE();
 
 - (instancetype)init {
   if (self = [super init]) {
+    _sessionManager = [GCKCastContext sharedInstance].sessionManager;
     [[NSNotificationCenter defaultCenter]
       addObserver:self
          selector:@selector(castDeviceDidChange:)
@@ -32,13 +39,19 @@ RCT_EXPORT_MODULE();
 
 - (NSDictionary *)constantsToExport {
   return @{
-    @"CAST_STATE_CHANGED": CAST_STATE_CHANGED
+    @"CAST_STATE_CHANGED": CAST_STATE_CHANGED,
+    @"MEDIA_STATUS_UPDATED" : MEDIA_STATUS_UPDATED,
+    @"MEDIA_PLAYBACK_STARTED" : MEDIA_PLAYBACK_STARTED,
+    @"MEDIA_PLAYBACK_ENDED" : MEDIA_PLAYBACK_ENDED,
   };
 }
 
 - (NSArray<NSString *> *)supportedEvents {
   return @[
-    CAST_STATE_CHANGED
+    CAST_STATE_CHANGED,
+    MEDIA_STATUS_UPDATED,
+    MEDIA_PLAYBACK_STARTED,
+    MEDIA_PLAYBACK_ENDED,
   ];
 }
 
@@ -47,7 +60,7 @@ RCT_EXPORT_MODULE();
   hasListeners = YES;
   // Set up any upstream listeners or background tasks as necessary
   dispatch_async(dispatch_get_main_queue(), ^{
-//    [GCKCastContext.sharedInstance.sessionManager addListener:self];
+   [_sessionManager addListener:self];
   });
 }
 
@@ -55,8 +68,10 @@ RCT_EXPORT_MODULE();
 - (void)stopObserving {
   hasListeners = NO;
   // Remove upstream listeners, stop unnecessary background tasks
-// FIXME: this crashes on (hot) reload
-//  [GCKCastContext.sharedInstance.sessionManager removeListener:self];
+  // FIXME: this crashes on (hot) reload
+  dispatch_async(dispatch_get_main_queue(), ^{
+   [_sessionManager removeListener:self];
+  });
 }
 
 # pragma mark - GCKCastContext methods
@@ -100,6 +115,38 @@ RCT_EXPORT_METHOD(showIntroductoryOverlay:(id)options
   });
 }
 
+RCT_EXPORT_METHOD(endSession
+                  : (BOOL)stopCasting resolver
+                  : (RCTPromiseResolveBlock)resolve rejecter
+                  : (RCTPromiseRejectBlock)reject) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if ([_sessionManager endSessionAndStopCasting:stopCasting]) {
+      resolve(@(YES));
+    } else {
+      NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain
+                                           code:GCKErrorCodeNoMediaSession
+                                       userInfo:nil];
+      reject(@"no_session", @"No castSession!", error);
+    }
+  });
+}
+
+- (void)switchToLocalPlayback {
+  NSLog(@"switchToLocalPlayback");
+  if (_sessionManager.currentCastSession) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [_sessionManager.currentCastSession.remoteMediaClient removeListener:self];
+    });
+  }
+}
+
+- (void)switchToRemotePlayback {
+  NSLog(@"switchToRemotePlayback");
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [_sessionManager.currentCastSession.remoteMediaClient addListener:self];
+  });
+}
+
 - (void)castDeviceDidChange:(NSNotification *)notification {
   if (!hasListeners) return;
 
@@ -108,4 +155,63 @@ RCT_EXPORT_METHOD(showIntroductoryOverlay:(id)options
                      body:[RCTConvert fromGCKCastState:state]];
 }
 
+#pragma mark - GCKSessionManagerListener
+
+- (void)sessionManager:(GCKSessionManager *)sessionManager didStartSession:(GCKSession *)session {
+  NSLog(@"MediaViewController: sessionManager didStartSession %@", session);
+  [self switchToRemotePlayback];
+}
+
+- (void)sessionManager:(GCKSessionManager *)sessionManager didResumeSession:(GCKSession *)session {
+  NSLog(@"MediaViewController: sessionManager didResumeSession %@", session);
+  [self switchToRemotePlayback];
+}
+
+- (void)sessionManager:(GCKSessionManager *)sessionManager
+         didEndSession:(GCKSession *)session
+             withError:(NSError *)error {
+  NSLog(@"session ended with error: %@", error);
+  [self switchToLocalPlayback];
+}
+
+- (void)sessionManager:(GCKSessionManager *)sessionManager
+    didFailToStartSessionWithError:(NSError *)error {
+  [self switchToLocalPlayback];
+}
+
+- (void)sessionManager:(GCKSessionManager *)sessionManager
+    didFailToResumeSession:(GCKSession *)session
+                 withError:(NSError *)error {
+  [self switchToLocalPlayback];
+}
+
+#pragma mark - GCKRemoteMediaClientListener
+
+- (void)remoteMediaClient:(GCKRemoteMediaClient *)client
+     didUpdateMediaStatus:(GCKMediaStatus *)mediaStatus {
+      if (currentItemID != mediaStatus.currentItemID) {
+        // reset item status
+        currentItemID = mediaStatus.currentItemID;
+        playbackStarted = false;
+        playbackEnded = false;
+      }
+
+      NSDictionary *status = [RCTConvert fromGCKMediaStatus:mediaStatus];
+
+      [self sendEventWithName:MEDIA_STATUS_UPDATED body:@{@"mediaStatus" : status}];
+
+      if (!playbackStarted &&
+          mediaStatus.playerState == GCKMediaPlayerStatePlaying) {
+        [self sendEventWithName:MEDIA_PLAYBACK_STARTED
+                          body:@{@"mediaStatus" : status}];
+        playbackStarted = true;
+      }
+
+      if (!playbackEnded &&
+          mediaStatus.idleReason == GCKMediaPlayerIdleReasonFinished) {
+        [self sendEventWithName:MEDIA_PLAYBACK_ENDED
+                          body:@{@"mediaStatus" : status}];
+        playbackEnded = true;
+      }
+}
 @end

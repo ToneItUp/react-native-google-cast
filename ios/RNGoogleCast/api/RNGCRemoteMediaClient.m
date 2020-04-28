@@ -193,30 +193,30 @@ RCT_EXPORT_METHOD(stop: (nullable NSDictionary *) customData
 
 - (void)remoteMediaClient:(GCKRemoteMediaClient *)client
      didUpdateMediaStatus:(GCKMediaStatus *)mediaStatus {
-  if (currentItemID != mediaStatus.currentItemID) {
-    // reset item status
-    currentItemID = mediaStatus.currentItemID;
-    playbackStarted = false;
-    playbackEnded = false;
-  }
+      if (currentItemID != mediaStatus.currentItemID) {
+        // reset item status
+        currentItemID = mediaStatus.currentItemID;
+        playbackStarted = false;
+        playbackEnded = false;
+      }
 
-  NSDictionary *status = [RCTConvert fromGCKMediaStatus:mediaStatus];
+      NSDictionary *status = [RCTConvert fromGCKMediaStatus:mediaStatus];
 
-  [self sendEventWithName:MEDIA_STATUS_UPDATED body:@{@"mediaStatus" : status}];
+      [self sendEventWithName:MEDIA_STATUS_UPDATED body:@{@"mediaStatus" : status}];
 
-  if (!playbackStarted &&
-      mediaStatus.playerState == GCKMediaPlayerStatePlaying) {
-    [self sendEventWithName:MEDIA_PLAYBACK_STARTED
-                       body:@{@"mediaStatus" : status}];
-    playbackStarted = true;
-  }
+      if (!playbackStarted &&
+          mediaStatus.playerState == GCKMediaPlayerStatePlaying) {
+        [self sendEventWithName:MEDIA_PLAYBACK_STARTED
+                          body:@{@"mediaStatus" : status}];
+        playbackStarted = true;
+      }
 
-  if (!playbackEnded &&
-      mediaStatus.idleReason == GCKMediaPlayerIdleReasonFinished) {
-    [self sendEventWithName:MEDIA_PLAYBACK_ENDED
-                       body:@{@"mediaStatus" : status}];
-    playbackEnded = true;
-  }
+      if (!playbackEnded &&
+          mediaStatus.idleReason == GCKMediaPlayerIdleReasonFinished) {
+        [self sendEventWithName:MEDIA_PLAYBACK_ENDED
+                          body:@{@"mediaStatus" : status}];
+        playbackEnded = true;
+      }
 }
 
 @end
