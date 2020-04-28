@@ -68,9 +68,16 @@ public class RNGCMediaQueueItem {
   public static WritableMap toJson(final MediaQueueItem item) {
     final WritableMap json = new WritableNativeMap();
 
+    if(item == null) {
+      return json;
+    }
+
     final WritableArray activeTrackIds = Arguments.createArray();
-    for (long activeTrackId: item.getActiveTrackIds()) {
-      activeTrackIds.pushInt((int) activeTrackId);
+    long[] activeTracks = item.getActiveTrackIds();
+    if (activeTracks != null) {
+      for (long activeTrackId : activeTracks) {
+        activeTrackIds.pushInt((int) activeTrackId);
+      }
     }
     json.putArray("activeTrackIds", activeTrackIds);
 
@@ -82,11 +89,15 @@ public class RNGCMediaQueueItem {
 
     json.putMap("mediaInfo", RNGCMediaInfo.toJson(item.getMedia()));
 
-    json.putDouble("playbackDuration", item.getPlaybackDuration());
+    Double playbackDuration = item.getPlaybackDuration();
+    playbackDuration = Double.isInfinite(playbackDuration) ? -1 : playbackDuration;
+    json.putDouble("playbackDuration", playbackDuration);
 
     json.putDouble("preloadTime", item.getPreloadTime());
 
-    json.putDouble("startTime", item.getStartTime());
+    Double startTime = item.getStartTime();
+    startTime = Double.isNaN(startTime) ? -1 : startTime;
+    json.putDouble("startTime", startTime);
 
     return json;
   }

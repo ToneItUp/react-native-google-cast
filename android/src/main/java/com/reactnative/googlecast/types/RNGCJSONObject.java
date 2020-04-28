@@ -18,6 +18,11 @@ public class RNGCJSONObject {
 
   public static WritableMap toJson(JSONObject jsonObject) {
     WritableMap writableMap = Arguments.createMap();
+
+    if (jsonObject == null) {
+      return writableMap;
+    }
+
     Iterator iterator = jsonObject.keys();
 
     while (iterator.hasNext()) {
@@ -26,7 +31,10 @@ public class RNGCJSONObject {
         Object value = jsonObject.get(key);
 
         if (value instanceof Float || value instanceof Double) {
-          writableMap.putDouble(key, jsonObject.getDouble(key));
+          Double dValue = jsonObject.getDouble(key);
+          if (!Double.isNaN(dValue) && !Double.isInfinite(dValue)) {
+            writableMap.putDouble(key, dValue);
+          }
         } else if (value instanceof Number) {
           writableMap.putInt(key, jsonObject.getInt(key));
         } else if (value instanceof String) {

@@ -28,6 +28,9 @@ public class RNGCMediaInfo {
   public static WritableMap toJson(final MediaInfo info) {
     final WritableMap json = new WritableNativeMap();
 
+    if (info == null) {
+      return json;
+    }
     // adBreakClips
 
     // adBreaks
@@ -41,8 +44,11 @@ public class RNGCMediaInfo {
     json.putString("entity", info.getEntity());
 
     WritableArray mediaTracks = Arguments.createArray();
-    for (MediaTrack track: info.getMediaTracks()) {
-      mediaTracks.pushMap(RNGCMediaTrack.toJson(track));
+    List<MediaTrack> mtList = info.getMediaTracks();
+    if (mtList != null) {
+      for (MediaTrack track : mtList) {
+        mediaTracks.pushMap(RNGCMediaTrack.toJson(track));
+      }
     }
     json.putArray("mediaTracks", mediaTracks);
 

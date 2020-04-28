@@ -17,6 +17,10 @@ public class RNGCDevice {
   public static WritableMap toJson(final CastDevice device) {
     final WritableMap json = new WritableNativeMap();
 
+    if (device == null) {
+      return json;
+    }
+
     json.putString("deviceId", device.getDeviceId());
 
     json.putString("deviceVersion", device.getDeviceVersion());

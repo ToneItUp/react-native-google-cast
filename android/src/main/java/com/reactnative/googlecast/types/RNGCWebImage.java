@@ -15,6 +15,10 @@ public class RNGCWebImage {
   public static WritableMap toJson(final WebImage image) {
     final WritableMap json = new WritableNativeMap();
 
+    if (image == null) {
+      return json;
+    }
+
     json.putString("url", image.getUrl().toString());
     json.putInt("height", image.getHeight());
     json.putInt("width", image.getWidth());

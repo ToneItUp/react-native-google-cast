@@ -66,10 +66,6 @@ public class RNGCSessionManagerListener
 
   private void onConnected(final CastSession castSession) {
     this.castSession = castSession;
-
-//    remoteMediaClientListener = new RNGCRemoteMediaClientListener(module);
-//    castSession.getRemoteMediaClient().registerCallback(
-//        remoteMediaClientListener);
   }
 
   private void onDisconnected() { this.castSession = null; }

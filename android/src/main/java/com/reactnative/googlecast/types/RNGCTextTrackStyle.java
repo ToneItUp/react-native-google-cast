@@ -70,6 +70,10 @@ public class RNGCTextTrackStyle {
   public static WritableMap toJson(final TextTrackStyle style) {
     final WritableMap json = new WritableNativeMap();
 
+    if (style == null) {
+      return json;
+    }
+
     json.putString("backgroundColor",
                    RNGCColor.toJson(style.getBackgroundColor()));
 
